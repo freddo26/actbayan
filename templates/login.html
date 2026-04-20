@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div id="form">  
+            <!-- Form -->
+            <form method="POST">
+    <div class="field-item">
+        <label for="e">Email Address/Phone Number:</label>
+        <input id="e" type="text" name="e" placeholder="Enter your email address or phone number" required>
+    </div>
+
+    <div class="field-item">
+        <label for="pass">Password</label>
+        <input type="password" name="pass" id="pass" required>
+    </div>
+    <div class="field-item">
+        <input type="submit" value="Login">
+    </div>
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+</form>
+        <p>Don't Have an Account?, <a href="{{ url_for('register') }}">Register Here</a></p>
+        </div>
+    </div>
+   
+</body>
+</html>
