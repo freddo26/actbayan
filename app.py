@@ -11,6 +11,7 @@ def connect_db():
         database="actbayan"
     )
 
+<<<<<<< HEAD
 @app.route('/')
 def home():
     return redirect(url_for('login'))
@@ -35,6 +36,10 @@ def login():
             if (u == email or u == phone) and p == password:
                 return render_template('dashboard.html', user=u)
         return render_template('login.html', error="Invalid credentials")
+=======
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+>>>>>>> d22bc0c1a5bff08c8e46aa8e9526343bdc57dc11
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -72,7 +77,11 @@ def register():
         cursor.execute(query, values)
         con.commit()
 
+<<<<<<< HEAD
         return redirect(url_for('login'))
+=======
+        return render_template('dashboard.html')
+>>>>>>> d22bc0c1a5bff08c8e46aa8e9526343bdc57dc11
 
     return render_template('register.html')
 
