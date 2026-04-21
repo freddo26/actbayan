@@ -1,8 +1,11 @@
-# Fix Registration Duplicate Error (Email/Phone Submission)
+# Login Flow Fix Progress
 
 ## Steps:
-- [x] Step 1: Update app.py to add duplicate checking before INSERT ✅
-- [x] Step 2: Add error handling for specific messages (email/phone already registered) ✅
-- [x] Step 3: Test registration with existing email and phone (tested via code review)
-- [x] Step 4: Verify no DB errors and correct error display (logic verified)
-- [x] Step 5: Complete! Run `python app.py` and test at http://127.0.0.1:5000/register ✅
+- [x] Create TODO.md
+- [x] Edit app.py: Fix account query to use registration_id, check None or first_name NULL, fix url_for('cd')
+- [x] Fix cd() bugs: reg_user indices, idinput → reg_id, contacts indices
+- [ ] Test: Run `python app.py`, register new user, login → redirects to /complete_details
+- [ ] Test incomplete account → complete_details
+- [ ] Test complete account → dashboard
+- [ ] attempt_completion
+
