@@ -1390,26 +1390,59 @@ def register():
 
         email = data.get('e', '').strip()
         phone = data.get('pn', '').strip()
-        password = data.get('pass')
-        conpass = data.get('conpass')
+        password = data.get('pass', '')
+        conpass = data.get('conpass', '')
 
+        # Must provide at least email or phone
+        if not email and not phone:
+            return render_template(
+                'register.html',
+                error="Enter email or phone number"
+            )
+
+        # Check existing credentials FIRST
+        dupq = """
+            SELECT emorph
+            FROM usercreds
+            WHERE emorph = %s OR emorph = %s
+        """
+
+        cursor.execute(dupq, (email, phone))
+        duplicate = cursor.fetchone()
+
+        if duplicate:
+            return render_template(
+                'register.html',
+                error="The email or phone number has been already registered"
+            )
+
+        # Password validation
         if len(password) < 8:
-            return render_template('register.html', error="Password must be at least 8 characters long")
+            return render_template(
+                'register.html',
+                error="Password must be at least 8 characters long"
+            )
 
         if password != conpass:
-            return render_template('register.html', error="Passwords do not match")
+            return render_template(
+                'register.html',
+                error="Passwords do not match"
+            )
 
+        # Hash password
         hashed_pw = hash_password_bcrypt(password)
 
+        # Insert temporary registration
+        query = """
+            INSERT INTO registration (email_address, phone_number, password)
+            VALUES (%s, %s, %s)
+        """
 
-        if email or phone:
-            query = """
-                INSERT INTO registration (email_address, phone_number, password)
-                VALUES (%s, %s, %s)
-            """
-            values = (email if email else None, phone if phone else None, hashed_pw)
-        else:
-            return render_template('register.html', error="Enter email or phone number")
+        values = (
+            email if email else None,
+            phone if phone else None,
+            hashed_pw
+        )
 
         cursor.execute(query, values)
         con.commit()
