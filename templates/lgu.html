@@ -649,7 +649,7 @@
                         {# ===== FB-STYLE COLLAGE: cover (image_url) + extras (reports_media) ===== #}
                         {% set _cover = (c.image_url|string).replace("bytearray(b'", "").replace("b'", "").replace("')", "").replace("'", "") %}
                         {% set _extras_raw = media_by_report.get(c.report_id, []) if media_by_report is defined else [] %}
-                        {% set _gallery = [_cover] + _extras_raw %}
+                        {% set _gallery = [_cover] + _extras_raw[1:] %}
                         {% set _total = _gallery|length %}
                         {% set _shown = _gallery[:5] %}
                         {% set _ncols = _shown|length %}
