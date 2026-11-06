@@ -21,6 +21,15 @@
             --primary-red: #8b0000;
             --primary-red-hover: #a30000;
             --red-light: rgba(139, 0, 0, 0.08);
+
+        .upvote-btn.upvoted {
+            color: var(--primary-red) !important;
+            border-color: var(--primary-red) !important;
+            background: var(--red-light);
+        }
+
+        .upvote-btn.upvoted i {
+            transform: scale(1.2);
         }
 
         body.dark-mode {
@@ -1212,6 +1221,7 @@
             const dateStr = r.created_at_str ?? 'Recently';
             const public_key = r.public_key ?? '';
             const upvote_count = r.upvote_count ?? 0;
+            const isUpvoted = r.is_upvoted || false;
             const report_id = r.report_id ?? 0;
             const color = getStatusColor(status);
             const emoji = getCategoryEmoji(cat);
@@ -1243,7 +1253,7 @@
                         <span><i class="far fa-clock"></i> ${dateStr}</span>
                     </div>
                     <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border-color);">
-                        <button class="upvote-btn" data-report-id="${report_id}" data-public-key="${public_key}" data-current-upvote="${upvote_count || 0}" style="width:100%;padding:8px;background:var(--bg-nav-card);border:1px solid var(--border-color);border-radius:8px;font-size:12px;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                        <button class="upvote-btn ${isUpvoted ? 'upvoted' : ''}" data-report-id="${report_id}" data-public-key="${public_key}" data-current-upvote="${upvote_count || 0}" style="width:100%;padding:8px;background:var(--bg-nav-card);border:1px solid var(--border-color);border-radius:8px;font-size:12px;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;${isUpvoted ? 'color: var(--primary-red) !important; border-color: var(--primary-red) !important; background: var(--red-light);' : ''}">
                             <i class="fas fa-arrow-up"></i> Upvote
                             <span class="upvote-count-display">${upvote_count || 0}</span>
                         </button>

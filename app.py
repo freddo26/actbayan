@@ -529,6 +529,7 @@ def users():
         SELECT
             a.account_id,
             CONCAT(a.first_name, ' ', a.last_name) AS fullname,
+            a.middle_initial,
             '' AS profile_photo,
             c.email,
             c.phone_number,
@@ -556,6 +557,8 @@ def users():
         """
     )
     rows = cursor.fetchall()
+    
+    
 
     if request.method == 'POST':
         cursor = con.cursor()
@@ -1031,6 +1034,30 @@ def react_comment():
 
     return jsonify({'success': True, 'action': 'added', 'reaction': reaction_type})
 
+@app.route("/api/getfullname/<int:account_id>")
+def pulnem(account_id):
+    con = connect_db()
+    cursor = con.cursor()
+
+    cursor.execute("""
+        SELECT CONCAT_WS(' ', first_name, middle_initial, last_name) AS fulln
+        FROM accounts
+        WHERE account_id = %s
+    """, (account_id,))
+
+    result = cursor.fetchone()
+
+    cursor.close()
+    con.close()
+
+    neym = result[0] if result else None
+
+    if neym is None:
+        return jsonify({'success': False, 'message': 'User not found'}), 404
+
+    return jsonify({'success': True, 'fullname': neym})    
+    
+
 
 @app.route('/api/report_updates/<int:report_id>')
 def api_report_updates(report_id):
@@ -1060,6 +1087,64 @@ def api_report_updates(report_id):
 
     return jsonify(updates)
 
+
+@app.route('/api/user_history/<int:account_id>')
+def api_user_history(account_id):
+    if 'user_id' not in session or session.get('user_role') != 'admin':
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+
+    con = connect_db()
+    cursor = con.cursor(dictionary=True)
+
+    # Query 1: Login attempts (Formatted dates to prevent JSON serialization errors)
+    cursor.execute(
+        """
+        SELECT 
+            DATE_FORMAT(aa.attempted_at, '%b %d, %Y - %h:%i %p') AS attempted_at,
+            aa.credential_used,
+            aa.action AS status
+        FROM access_attempt aa
+        JOIN credentials c ON aa.cred_id = c.cred_id
+        JOIN usercreds uc ON c.user_id = uc.user_id
+        JOIN accounts a ON uc.contact_id = a.contact_id
+        WHERE a.account_id = %s
+        ORDER BY aa.attempted_at DESC
+        LIMIT 100
+        """,
+        (account_id,)
+    )
+    logins = cursor.fetchall()
+
+    # Query 2: Recent activities (Added r.title and formatted dates)
+    cursor.execute(
+        """
+        SELECT 
+            ra.activity_type,
+            ra.content,
+            COALESCE(r.title, 'General Update') AS report_title,
+            DATE_FORMAT(COALESCE(r.last_activity, r.created_at), '%b %d, %Y - %h:%i %p') AS activity_time
+        FROM report_activity ra
+        LEFT JOIN reports r ON ra.report_id = r.report_id
+        WHERE ra.account_id = %s
+        ORDER BY ra.activity_id DESC
+        LIMIT 100
+        """,
+        (account_id,)
+    )
+    activities = cursor.fetchall()
+
+    con.close()
+    
+    # Handle potential None values from DATE_FORMAT if timestamps are missing
+    for log in logins:
+        if not log['attempted_at']:
+            log['attempted_at'] = 'Unknown Date'
+            
+    for act in activities:
+        if not act['activity_time']:
+            act['activity_time'] = 'Unknown Date'
+
+    return jsonify({'success': True, 'logins': logins, 'activities': activities})
 
 @app.route('/admin/login_attempts')
 def admin_login_attempts():
@@ -2936,6 +3021,21 @@ def barangay_map():
     """
     cursor.execute(rep)
     rloc = cursor.fetchall()
+
+    # Fetch upvote history for the current user to highlight upvoted reports
+    user_upvoted = set()
+    account_id = session.get('user_id')
+    if account_id:
+        upvote_query = """
+            SELECT report_id FROM report_activity
+            WHERE account_id = %s AND activity_type = 'upvote'
+        """
+        cursor.execute(upvote_query, (account_id,))
+        for row in cursor.fetchall():
+            user_upvoted.add(row['report_id'])
+
+    for r in rloc:
+        r['is_upvoted'] = r['report_id'] in user_upvoted
 
     for r in rloc:
         for k, v in list(r.items()):
